@@ -249,32 +249,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
             try {
                 const formData = new FormData(contactForm);
+                const accessKey = formData.get('access_key');
+                if (!accessKey || accessKey === 'PASTE_WEB3FORMS_ACCESS_KEY_HERE') {
+                    setFormStatus('[ setup needed: add your Web3Forms access key ]', 'error');
+                    return;
+                }
+
                 const senderEmail = formData.get('email');
                 if (senderEmail) {
-                    formData.set('_replyto', senderEmail);
+                    formData.set('replyto', senderEmail);
                 }
+                const payload = Object.fromEntries(formData);
 
                 const response = await fetch(contactForm.action, {
                     method: contactForm.method || 'POST',
-                    body: formData,
-                    headers: { Accept: 'application/json' }
+                    body: JSON.stringify(payload),
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json'
+                    }
                 });
+                const data = await response.json();
 
-                if (response.ok) {
+                if (response.ok && data.success !== false) {
                     contactForm.reset();
                     setFormStatus(`[ success: message transmitted to ${recipientEmail} ]`, 'success');
                     return;
                 }
 
-                let errorMessage = '[ error: message failed to send ]';
-                try {
-                    const data = await response.json();
-                    if (data.errors && data.errors.length) {
-                        errorMessage = `[ error: ${data.errors[0].message} ]`;
-                    }
-                } catch (error) {
-                    // Keep the generic error when the endpoint does not return JSON.
-                }
+                const errorMessage = data.message || data.body?.message || 'message failed to send';
                 setFormStatus(errorMessage, 'error');
             } catch (error) {
                 setFormStatus('[ network error: please try again ]', 'error');
