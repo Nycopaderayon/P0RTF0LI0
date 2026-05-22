@@ -459,6 +459,12 @@ body::before {
 
 .about-text {
     color: var(--text-secondary);
+    line-height: 1.85;
+    text-align: justify;
+    text-justify: inter-word;
+    text-align-last: left;
+    hyphens: auto;
+    max-width: 72ch;
 }
 
 /* Stats */
@@ -1033,6 +1039,12 @@ body.light-theme .form-control::placeholder {
     }
     .about-stats {
         grid-template-columns: 1fr;
+    }
+    .about-text {
+        text-align: left;
+        hyphens: none;
+        line-height: 1.75;
+        max-width: none;
     }
     .contact-form, .contact-info-card, .resume-terminal, .skills-container-hacker {
         padding: 1.5rem;

@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (terminalBody) {
         const terminalSequence = [
             { type: 'command', text: 'whoami' },
-            { type: 'output', text: 'Nyco Paderayon\nRole: IT Specialist, Web Designer, VA & Photo/Video Editor\nLocation: Davao City, Philippines\nExperience: 3+ Years' },
+            { type: 'output', text: 'Nyco Paderayon\nRole: IT System and Web Development, Web Designer, VA & Photo/Video Editor\nLocation: Davao City, Philippines\nExperience: 3+ Years' },
             { type: 'command', text: 'cat skills.txt' },
             { type: 'output', text: 'Languages: HTML, CSS, JavaScript, Java, Python\nFrameworks: Django, Bootstrap 5\nTools: Figma, Adobe XD, Photoshop, Illustrator, Premiere Pro\nServices: Virtual Assistance, Data Entry, SEO' },
             { type: 'command', text: 'ping -c 3 connections' },
