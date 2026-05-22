@@ -218,6 +218,76 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /* ==========================================
+       CONTACT FORM SUBMISSION
+       ========================================== */
+    const contactForm = document.querySelector('.contact-form');
+    if (contactForm) {
+        const submitButton = contactForm.querySelector('button[type="submit"]');
+        const statusMessage = contactForm.querySelector('.form-status');
+        const recipientEmail = contactForm.dataset.recipient || 'Nycopaderayon@gmail.com';
+        const defaultButtonHtml = submitButton ? submitButton.innerHTML : '';
+
+        function setFormStatus(message, state) {
+            if (!statusMessage) return;
+            statusMessage.textContent = message;
+            statusMessage.className = `form-status ${state || ''}`.trim();
+        }
+
+        contactForm.addEventListener('submit', async event => {
+            event.preventDefault();
+
+            if (!contactForm.action) {
+                setFormStatus('[ error: form endpoint missing ]', 'error');
+                return;
+            }
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>transmitting...';
+            }
+            setFormStatus('[ sending secure message... ]', 'sending');
+
+            try {
+                const formData = new FormData(contactForm);
+                const senderEmail = formData.get('email');
+                if (senderEmail) {
+                    formData.set('_replyto', senderEmail);
+                }
+
+                const response = await fetch(contactForm.action, {
+                    method: contactForm.method || 'POST',
+                    body: formData,
+                    headers: { Accept: 'application/json' }
+                });
+
+                if (response.ok) {
+                    contactForm.reset();
+                    setFormStatus(`[ success: message transmitted to ${recipientEmail} ]`, 'success');
+                    return;
+                }
+
+                let errorMessage = '[ error: message failed to send ]';
+                try {
+                    const data = await response.json();
+                    if (data.errors && data.errors.length) {
+                        errorMessage = `[ error: ${data.errors[0].message} ]`;
+                    }
+                } catch (error) {
+                    // Keep the generic error when the endpoint does not return JSON.
+                }
+                setFormStatus(errorMessage, 'error');
+            } catch (error) {
+                setFormStatus('[ network error: please try again ]', 'error');
+            } finally {
+                if (submitButton) {
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = defaultButtonHtml;
+                }
+            }
+        });
+    }
+
+    /* ==========================================
        THEME TOGGLE SYSTEM
        ========================================== */
     const themeToggleBtn = document.getElementById('theme-toggle');

@@ -12,7 +12,7 @@
     <link href='https://cdn.jsdelivr.net/npm/boxicons@2.0.5/css/boxicons.min.css' rel='stylesheet'>
     
     <!-- ===== Custom Custom CSS ===== -->
-    <link rel="stylesheet" href="assets/css/styles.css?v=1.6">
+    <link rel="stylesheet" href="assets/css/styles.css?v=1.8">
 
     <!-- Stylesheet override to bypass cache and force reset on View Details button -->
     <style>
@@ -334,8 +334,10 @@
                     </div>
                     <!-- Right: Form shell -->
                     <div class="col-lg-7">
-                        <form class="contact-form" action="https://formspree.io/f/myzwnjyy" method="POST">
+                        <form class="contact-form" action="https://formspree.io/f/myzwnjyy" method="POST" data-recipient="Nycopaderayon@gmail.com">
                             <h4 class="mb-4 fw-bold font-mono">secure_message.sh</h4>
+                            <input type="hidden" name="_subject" value="New portfolio message for Nyco Paderayon">
+                            <input type="text" name="_gotcha" class="form-honeypot" tabindex="-1" autocomplete="off">
                             <div class="row g-4">
                                 <div class="col-md-6">
                                     <input type="text" class="form-control" placeholder="client_name" name="name" required>
@@ -348,6 +350,9 @@
                                 </div>
                                 <div class="col-12">
                                     <button type="submit" class="btn btn-primary btn-lg px-5"><i class="bi bi-send me-2"></i>transmit</button>
+                                </div>
+                                <div class="col-12">
+                                    <p class="form-status" role="status" aria-live="polite"></p>
                                 </div>
                             </div>
                         </form>
@@ -396,6 +401,6 @@
     <script src="https://unpkg.com/scrollreveal"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom Main Logic script -->
-    <script src="assets/js/main.js?v=1.7"></script>
+    <script src="assets/js/main.js?v=1.9"></script>
 </body>
 </html>

@@ -974,6 +974,39 @@ body.light-theme .form-control::placeholder {
     box-shadow: var(--glow-shadow);
 }
 
+.form-honeypot {
+    position: absolute;
+    left: -9999px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.form-status {
+    min-height: 1.4rem;
+    margin: 0;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.form-status.sending {
+    color: var(--color-secondary);
+}
+
+.form-status.success {
+    color: var(--color-accent);
+}
+
+.form-status.error {
+    color: #f87171;
+}
+
+.contact-form button[disabled] {
+    cursor: wait;
+    opacity: 0.72;
+    transform: none;
+}
+
 /* Socials styling */
 .footer-social {
     color: var(--text-secondary);
