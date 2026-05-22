@@ -688,6 +688,10 @@ body::before {
     filter: none !important;
 }
 
+.portfolio-hover-content iframe {
+    touch-action: pan-x pan-y;
+}
+
 .card-body {
     background: transparent;
     padding: 1.5rem;
@@ -874,14 +878,28 @@ body::before {
 }
 
 @media (max-width: 600px) {
+    #lightbox-overlay {
+        padding: 0.75rem;
+    }
     #lightbox-box {
+        width: 100%;
         max-height: 95vh;
     }
+    .lightbox-header {
+        padding: 0.55rem 0.75rem;
+    }
+    #lightbox-title {
+        font-size: 0.72rem;
+        padding: 0 0.5rem;
+    }
+    #lightbox-content {
+        min-height: 0;
+    }
     #lightbox-content iframe {
-        height: 60vh;
+        height: 68vh;
     }
     #lightbox-content img {
-        max-height: 60vh;
+        max-height: 68vh;
     }
 }
 
@@ -1019,9 +1037,70 @@ body.light-theme .form-control::placeholder {
     .contact-form, .contact-info-card, .resume-terminal, .skills-container-hacker {
         padding: 1.5rem;
     }
+    .resume-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+    .resume-download {
+        width: min(100%, 320px);
+        justify-content: center;
+        font-size: 0.78rem;
+        padding: 0.7rem 1rem;
+        white-space: normal;
+        text-align: center;
+    }
+    .resume-hover-preview {
+        position: static;
+        display: none;
+        width: 100%;
+        height: min(64vh, 430px);
+        margin-bottom: 1rem;
+        transform: none;
+    }
+    .resume-actions.preview-active .resume-hover-preview {
+        display: block;
+        transform: none;
+    }
+    .portfolio-card:hover {
+        transform: none;
+    }
+    .portfolio-card img,
+    .portfolio-hover-preview {
+        height: clamp(180px, 54vw, 230px);
+    }
+    .portfolio-hover-bar {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .card-body {
+        padding: 1.15rem;
+    }
+    .card-title {
+        font-size: 1.05rem;
+        overflow-wrap: anywhere;
+    }
+    .btn-view {
+        font-size: 0.78rem;
+    }
     #theme-toggle {
         margin-left: 0;
         margin-top: 0.5rem;
         width: fit-content;
+    }
+}
+
+@media (hover: none), (pointer: coarse) {
+    .portfolio-card:hover {
+        transform: none;
+    }
+    .portfolio-card.preview-active {
+        border-color: var(--color-accent);
+        box-shadow: var(--glow-shadow);
+    }
+    .portfolio-hover-preview {
+        transition: opacity 0.16s ease, visibility 0.16s ease;
     }
 }

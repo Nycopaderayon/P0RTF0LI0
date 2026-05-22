@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const lbTitle      = document.getElementById('lightbox-title');
     const lbClose      = document.getElementById('lightbox-close');
     const lbDownload   = document.getElementById('lightbox-download');
+    const isTouchPreviewDevice = window.matchMedia('(hover: none), (pointer: coarse)').matches;
     let   currentSrc   = '';
 
     function openLightbox(src, type, title) {
@@ -48,7 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Attach preview-btn click handlers
     document.querySelectorAll('.preview-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
+        btn.addEventListener('click', (event) => {
+            const card = btn.closest('.portfolio-card');
+            if (isTouchPreviewDevice && card && !card.classList.contains('preview-active')) {
+                event.preventDefault();
+                card.dispatchEvent(new CustomEvent('portfolio:show-preview'));
+                return;
+            }
+
             const src   = btn.dataset.src;
             const type  = btn.dataset.type;
             const title = btn.dataset.title;
@@ -117,11 +125,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (hoverPreview) hoverPreview.setAttribute('aria-hidden', 'true');
         }
 
+        card.addEventListener('portfolio:show-preview', showPortfolioPreview);
         card.addEventListener('mouseenter', showPortfolioPreview);
         card.addEventListener('mouseleave', hidePortfolioPreview);
         card.addEventListener('focusin', showPortfolioPreview);
         card.addEventListener('focusout', event => {
             if (!card.contains(event.relatedTarget)) {
+                hidePortfolioPreview();
+            }
+        });
+
+        card.addEventListener('pointerup', event => {
+            if (!isTouchPreviewDevice || event.pointerType === 'mouse') return;
+            if (event.target.closest('.preview-btn') || event.target.closest('.portfolio-hover-preview')) return;
+            if (!card.classList.contains('preview-active')) {
+                showPortfolioPreview();
+            }
+        });
+
+        document.addEventListener('pointerdown', event => {
+            if (!isTouchPreviewDevice || event.pointerType === 'mouse') return;
+            if (!card.contains(event.target)) {
                 hidePortfolioPreview();
             }
         });
@@ -152,6 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (resumeActions) {
         const resumePreview = resumeActions.querySelector('.resume-hover-preview');
         const resumeFrame = resumePreview ? resumePreview.querySelector('iframe') : null;
+        const resumeDownload = resumeActions.querySelector('.resume-download');
         let resumePreviewHideTimer = null;
 
         function showResumePreview() {
@@ -174,6 +199,22 @@ document.addEventListener('DOMContentLoaded', function () {
         resumeActions.addEventListener('mouseleave', hideResumePreview);
         resumeActions.addEventListener('focusin', showResumePreview);
         resumeActions.addEventListener('focusout', hideResumePreview);
+
+        if (resumeDownload) {
+            resumeDownload.addEventListener('click', event => {
+                if (isTouchPreviewDevice && !resumeActions.classList.contains('preview-active')) {
+                    event.preventDefault();
+                    showResumePreview();
+                }
+            });
+        }
+
+        document.addEventListener('pointerdown', event => {
+            if (!isTouchPreviewDevice || event.pointerType === 'mouse') return;
+            if (!resumeActions.contains(event.target)) {
+                hideResumePreview();
+            }
+        });
     }
 
     /* ==========================================
