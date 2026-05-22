@@ -224,8 +224,17 @@ document.addEventListener('DOMContentLoaded', function () {
     if (contactForm) {
         const submitButton = contactForm.querySelector('button[type="submit"]');
         const statusMessage = contactForm.querySelector('.form-status');
+        const emailInput = contactForm.querySelector('input[name="email"]');
         const recipientEmail = contactForm.dataset.recipient || 'Nycopaderayon@gmail.com';
         const defaultButtonHtml = submitButton ? submitButton.innerHTML : '';
+        const blockedEmailDomains = new Set([
+            'example.com',
+            'example.net',
+            'example.org',
+            'fake.com',
+            'mailinator.com',
+            'test.com'
+        ]);
 
         function setFormStatus(message, state) {
             if (!statusMessage) return;
@@ -233,8 +242,100 @@ document.addEventListener('DOMContentLoaded', function () {
             statusMessage.className = `form-status ${state || ''}`.trim();
         }
 
+        function getEmailValidationError(rawEmail) {
+            const email = rawEmail.trim().toLowerCase();
+            const parts = email.split('@');
+            const local = parts[0] || '';
+            const domain = parts[1] || '';
+
+            if (!email) return 'email address is required';
+            if (/\s/.test(email) || parts.length !== 2) return 'email format is invalid';
+            if (local.length > 64 || domain.length > 253) return 'email address is too long';
+            if (local.startsWith('.') || local.endsWith('.') || local.includes('..')) return 'email format is invalid';
+            if (!/^[^\s@]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(email)) return 'email domain is invalid';
+            if (domain.includes('..')) return 'email domain is invalid';
+            if (blockedEmailDomains.has(domain)) return 'please use a real email address';
+
+            const labels = domain.split('.');
+            const hasInvalidLabel = labels.some(label => (
+                !label ||
+                label.startsWith('-') ||
+                label.endsWith('-') ||
+                !/^[a-z0-9-]+$/i.test(label)
+            ));
+
+            return hasInvalidLabel ? 'email domain is invalid' : '';
+        }
+
+        function getAbstractEmailError(data) {
+            if (!data) return 'email verification failed';
+            const deliverability = data.email_deliverability || {};
+            const quality = data.email_quality || {};
+            const risk = data.email_risk || {};
+
+            if (deliverability.status && deliverability.status !== 'deliverable') return 'email address does not receive mail';
+            if (deliverability.is_format_valid === false) return 'email format is invalid';
+            if (deliverability.is_mx_valid === false) return 'email domain cannot receive mail';
+            if (deliverability.is_smtp_valid === false) return 'email mailbox could not be verified';
+            if (quality.is_disposable === true) return 'temporary emails are not allowed';
+            if (quality.is_role === true) return 'please use a personal email address';
+            if (quality.is_username_suspicious === true) return 'email address looks suspicious';
+            if (risk.address_risk_status === 'high' || risk.domain_risk_status === 'high') return 'email address looks risky';
+            if (quality.score && Number(quality.score) < 0.7) return 'email quality score is too low';
+
+            if (data.deliverability === 'UNDELIVERABLE') return 'email address does not receive mail';
+            if (data.is_valid_format && data.is_valid_format.value === false) return 'email format is invalid';
+            if (data.is_mx_found && data.is_mx_found.value === false) return 'email domain cannot receive mail';
+            if (data.is_smtp_valid && data.is_smtp_valid.value === false) return 'email mailbox could not be verified';
+            if (data.is_disposable_email && data.is_disposable_email.value === true) return 'temporary emails are not allowed';
+            if (data.is_role_email && data.is_role_email.value === true) return 'please use a personal email address';
+            if (data.quality_score && Number(data.quality_score) < 0.7) return 'email quality score is too low';
+
+            return '';
+        }
+
+        async function verifyEmailWithAbstract(email, apiKey) {
+            const endpoint = new URL('https://emailreputation.abstractapi.com/v1/');
+            endpoint.searchParams.set('api_key', apiKey);
+            endpoint.searchParams.set('email', email);
+
+            const response = await fetch(endpoint.toString(), {
+                method: 'GET',
+                headers: { Accept: 'application/json' }
+            });
+            const data = await response.json();
+
+            if (!response.ok) {
+                const message = data.error?.message || data.message || 'email verification unavailable';
+                throw new Error(message);
+            }
+
+            return getAbstractEmailError(data);
+        }
+
+        if (emailInput) {
+            emailInput.addEventListener('input', () => {
+                emailInput.setCustomValidity('');
+            });
+            emailInput.addEventListener('invalid', () => {
+                const emailError = getEmailValidationError(emailInput.value) || 'email format is invalid';
+                setFormStatus(`[ error transmitting: ${emailError} ]`, 'error');
+            });
+        }
+
         contactForm.addEventListener('submit', async event => {
             event.preventDefault();
+
+            const emailError = getEmailValidationError(emailInput ? emailInput.value : '');
+            if (emailError) {
+                if (emailInput) {
+                    emailInput.setCustomValidity(emailError);
+                    emailInput.reportValidity();
+                    emailInput.focus();
+                }
+                setFormStatus(`[ error transmitting: ${emailError} ]`, 'error');
+                return;
+            }
 
             if (!contactForm.action) {
                 setFormStatus('[ error: form endpoint missing ]', 'error');
@@ -256,11 +357,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
 
                 const senderEmail = formData.get('email');
+                const abstractApiKey = formData.get('abstract_api_key');
+                if (!abstractApiKey || abstractApiKey === 'PASTE_ABSTRACT_EMAIL_API_KEY_HERE') {
+                    setFormStatus('[ setup needed: add your Abstract Email API key ]', 'error');
+                    return;
+                }
+
+                setFormStatus('[ verifying email address... ]', 'sending');
+                const abstractEmailError = await verifyEmailWithAbstract(senderEmail, abstractApiKey);
+                if (abstractEmailError) {
+                    if (emailInput) {
+                        emailInput.setCustomValidity(abstractEmailError);
+                        emailInput.reportValidity();
+                        emailInput.focus();
+                    }
+                    setFormStatus(`[ error transmitting: ${abstractEmailError} ]`, 'error');
+                    return;
+                }
+
                 if (senderEmail) {
                     formData.set('replyto', senderEmail);
                 }
+                formData.delete('abstract_api_key');
                 const payload = Object.fromEntries(formData);
 
+                setFormStatus('[ sending secure message... ]', 'sending');
                 const response = await fetch(contactForm.action, {
                     method: contactForm.method || 'POST',
                     body: JSON.stringify(payload),
